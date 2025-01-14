@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>이름으로 보는 진로 분석 (이름 전체 매핑)</title>
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px; margin: 20px auto; background: white;
+      border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      padding: 30px; transition: all 0.3s ease;
+    }
+    .container:hover {
+      transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    .title {
+      text-align: center; font-size: 28px; margin-bottom: 30px;
+      color: #2d3436; font-weight: 700; position: relative; padding-bottom: 15px;
+    }
+    .title:after {
+      content: ''; position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%); width: 60px; height: 4px;
+      background: linear-gradient(to right, #6c5ce7, #a8a4e2);
+      border-radius: 2px;
+    }
+    .input-group {
+      display: flex; gap: 15px; margin-bottom: 30px;
+    }
+    input {
+      flex: 1; padding: 15px 20px; border: 2px solid #e1e1e1;
+      border-radius: 12px; font-size: 16px; transition: all 0.3s ease;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    input:focus {
+      border-color: #6c5ce7; outline: none;
+      box-shadow: 0 0 0 3px rgba(108,92,231,0.2);
+    }
+    button {
+      padding: 15px 30px; background: linear-gradient(135deg,#6c5ce7 0%,#a8a4e2 100%);
+      color: white; border: none; border-radius: 12px; cursor: pointer;
+      font-size: 16px; font-weight: 600; transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(108,92,231,0.2);
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 14px rgba(108,92,231,0.3);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    .error {
+      color: #e74c3c; background-color: #fde8e7;
+      padding: 15px 20px; border-radius: 12px; margin-bottom: 20px;
+      display: none; animation: slideIn 0.3s ease;
+    }
+    .result {
+      background-color: #f8f9fa; padding: 25px; border-radius: 15px;
+      display: none; animation: slideIn 0.4s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result h3 {
+      color: #2d3436; margin-bottom: 20px; font-size: 22px; font-weight:700;
+    }
+    .result h4 {
+      color: #6c5ce7; margin: 20px 0 15px; font-size: 18px; font-weight:600;
+    }
+    .detail-list {
+      list-style-type: none; margin-left: 10px;
+    }
+    .detail-item {
+      margin-bottom: 15px; padding-left: 5px; position: relative;
+    }
+    .detail-item strong {
+      color: #6c5ce7; display: block; margin-bottom: 3px; font-weight:600;
+    }
+    .career-group {
+      margin: 15px 0; padding: 15px 20px; background: white;
+      border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+    .career-group:hover {
+      transform: translateX(5px); box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .career-group h5 {
+      color: #2d3436; margin-bottom: 10px; font-size:16px; font-weight:600;
+    }
+    .career-group p {
+      color: #636e72; line-height:1.6;
+    }
+    #advice-text {
+      padding: 15px 20px; background: white; border-radius:12px;
+      color: #2d3436; line-height:1.8; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      white-space: pre-line;  /* 줄바꿈 처리 */
+    }
+    .bottom-btns-container {
+      text-align: center; margin-top: 30px;
+    }
+    .bottom-btns-container a {
+      display: inline-block; margin: 0 10px; padding:12px 20px; border-radius:8px;
+      text-decoration: none; color: #fff; background:#6c5ce7; font-weight:600;
+      transition: background 0.3s;
+    }
+    .bottom-btns-container a:hover {
+      background: #a8a4e2;
+    }
+    @media (max-width:600px) {
+      .container { padding:20px; margin:10px; }
+      .title { font-size:24px; }
+      .input-group { flex-direction:column; }
+      button { width:100%; }
+      .result { padding:15px; }
+      .bottom-btns-container a {
+        display:block; margin:10px auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">이름으로 보는 진로 분석</h1>
+    
+    <form id="analyzer-form">
+      <div class="input-group">
+        <input type="text" id="name-input" placeholder="이름을 입력하세요 (예: 서복동)" required />
+        <button type="submit">분석하기</button>
+      </div>
+    </form>
+
+    <div id="error-message" class="error"></div>
+
+    <div id="result" class="result">
+      <h3>진로 분석 결과</h3>
+
+      <!-- 성격 특성 -->
+      <div id="personality-section">
+        <h4>성격 특성</h4>
+        <ul id="personality-list" class="detail-list"></ul>
+      </div>
+
+      <!-- 강점 -->
+      <div id="strengths-section">
+        <h4>강점</h4>
+        <ul id="strengths-list" class="detail-list"></ul>
+      </div>
+
+      <!-- 추천 진로 -->
+      <div id="careers-section">
+        <h4>추천 진로</h4>
+        <div id="careers-list"></div>
+      </div>
+
+      <!-- 조언 -->
+      <div id="advice-section">
+        <h4>조언</h4>
+        <p id="advice-text"></p>
+      </div>
+    </div>
+
+    <div class="bottom-btns-container">
+      <!-- 실제 링크는 직접 수정 -->
+      <a href="https://www.instagram.com/niceple_tarot" target="_blank">인스타그램</a>
+      <a href="https://pf.kakao.com/_Cgxcdn" target="_blank">카카오채널</a>
+      <a href="https://niceple.com/" target="_blank">수비학자사몰</a>
+    </div>
+  </div>
+
+
+  <script>
+    /****************************************************************
+      (1) 매핑 로직: 이름 '서복동' -> ['서','복','동'] -> [9,5,7] 
+          => union(9,5,7)에 대한 data를 합산
+    ****************************************************************/
+    const numberMappings = {
+         "여": "2",
+         // 3번
+         "민": "3", "임": "3", "노": "3", "모": "3", "삼": "3", "묵": "3", "문": "3", "미": "3", "누": "3", 
+         "흠": "3", "움": "3", "점": "3", "무": "3", "겸": "3", "림": "3", "매": "3", "맹": "3","나": "3", 
+         "남": "3", "마": "3", "명": "3", "목": "3","김": "3", "금": "3", "막": "3", "봄": "3", "내": "3",
+         // 4번
+         "석": "4", "로": "4", "학": "4", "슬": "4","라": "4","종": "4","루": "4","일": "4","식": "4","래": "4","례": "4",
+         "록": "4","소": "4","리": "4","말": "4","란": "4","숙": "4","근": "4","솔": "4","순": "4",
+         // 5번
+         "태": "5","택": "5","규": "5","분": "5","돔": "5","던": "5","만": "5","엽": "5","평": "5","효": "5","훈": "5",
+         "도": "5","봄": "5","다": "5","둔": "5","령": "5","봉": "5","탁": "5","탄": "5","대": "5","덕": "5","보": "5",
+         "단": "5","득": "5","련": "5","운": "5","편": "5","섭": "5","복": "5","필": "5","담": "5","듬": "5","렴": "5",
+         "엄": "5","표": "5","포": "5","돈": "5","두": "5","갑": "5","당": "5","딘": "5","후": "5","욱": "5","팽": "5",
+         // 6번
+         "정": "6",
+         // 7번
+         "최": "7","동": "7","차": "7","추": "7","건": "7","채": "7","화": "7","좌": "7","찬": "7","하": "7","준": "7",
+         // 8번
+         "박": "8","가": "8","람": "8","혜": "8","늘": "8","호": "8","해": "8","예": "8","중": "8","궁": "8","룡": "8",
+         "술": "8","곽": "8","계": "8","옹": "8","혁": "8","강": "8","율": "8","용": "8","송": "8","응": "8","사": "8",
+         "병": "8","열": "8","비": "8","군": "8","바": "8","야": "8","육": "8","방": "8","빙": "8","곡": "8","양": "8",
+         "백": "8","승": "8","옥": "8","을": "8","상": "8","오": "8","흥": "8","거": "8","늠": "8","반": "8","억": "8",
+         "남궁": "8","함": "8","독고": "8",
+         // 9번
+         "순": "9","이": "9","서": "9","선": "9","녀": "9","존": "9","회": "9","선우": "9","지": "9","향": "9","장": "9",
+         "제": "9","주": "9","철": "9","님": "9","제갈": "9","심": "9","수": "9","조": "9","재": "9","성": "9","자": "9",
+         "기": "9","실": "9","찰": "9","어": "9","요": "9","희": "9","홍": "9","유": "9","우": "9","언": "9","귀": "9",
+         "춘": "9","설": "9",
+         // 10번
+         "안": "10","연": "10","환": "10","윤": "10","인": "10","란": "10","원": "10","빈": "10","론": "10","완": "10",
+         "전": "10","온": "10","린": "10","한": "10","손": "10",
+         // 11번
+         "현": "11","진": "11","경": "11","극": "11","신": "11","청": "11","피": "11","염": "11","키": "11","창": "11",
+         "간": "11","닷": "11","심": "11","척": "11","타": "11","음": "11","천": "11","세": "11","감": "11","본": "11",
+         "션": "11","첨": "11","탐": "11","품": "11","위": "11","균": "11","견": "11","벼": "11","숀": "11","초": "11",
+         "파": "11","총": "11","의": "11","검": "11","곤": "11","변": "11","직": "11","카": "11","판": "11","휘": "11"
+       };
+
+
+    /****************************************************************
+      (2) careerData (여기서는 2,3,4,5,6,7,8,9,10,11 모두 포함 예시)
+          personality와 strengths는 title/desc 형태
+    ****************************************************************/
+   const careerData = {
+         // ================= 2번 (예시: 상세)
+         "2": {
+           personality: [
+             {
+               title: "냉정하고 이성적",
+               desc: "감정보다는 이성으로 상황을 판단하며, 논리적으로 접근하는 면이 강합니다."
+             },
+             {
+               title: "자기관리가 뛰어남",
+               desc: "스스로를 엄격히 통제하고, 목표 달성을 위한 자기계발을 지속적으로 추구합니다."
+             },
+             {
+               title: "신중한 성격",
+               desc: "중요한 결정을 내릴 때 서두르지 않고, 충분한 정보를 검토한 후에 움직입니다."
+             },
+             {
+               title: "깊이 있는 통찰력",
+               desc: "단순한 표면적 문제보다는, 그 이면의 근본 원인을 파악하려고 노력합니다."
+             },
+             {
+               title: "직관적 판단력",
+               desc: "분석을 바탕으로 직관을 발휘해 적절한 결론에 도달하는 능력이 뛰어납니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "분석력",
+               desc: "체계적으로 문제를 분해하고, 핵심을 찾아내는 과정에 능합니다."
+             },
+             {
+               title: "집중력",
+               desc: "하나의 목표나 과제에 몰입해 높은 성과를 내는 스타일입니다."
+             },
+             {
+               title: "자기관리능력",
+               desc: "시간관리, 목표관리 등을 스스로 체계적으로 설계하고 실행할 수 있습니다."
+             },
+             {
+               title: "문제해결능력",
+               desc: "이성적으로 문제 상황을 파악하고, 적절한 해결책을 모색하는 데 능숙합니다."
+             },
+             {
+               title: "체계적 사고",
+               desc: "작업을 단계별로 분할해 처리하고, 우선순위를 설정해 진행하는 걸 선호합니다."
+             },
+             {
+               title: "상담 능력",
+               desc: "주변 사람들의 고민을 경청하고, 논리적인 조언을 해줄 수 있는 역량이 있습니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "교육 분야",
+                   jobs: ["교수","연구원","교사","교육기획자","교재개발자","학습컨설턴트","교육프로그램 개발자"]
+               },
+               {
+                   category: "전문직",
+                   jobs: ["회계사","약사","법조인","세무사","노무사","특허법인","금융전문가"]
+               },
+               {
+                   category: "상담/심리",
+                   jobs: ["상담사","심리치료사","청소년상담사","가족상담사","중독치료전문가","진로상담사","임상심리사"]
+               },
+               {
+                   category: "연구/분석",
+                   jobs: ["데이터분석가","시장조사전문가","정책연구원","통계전문가","경영분석가","임상연구원"]
+               }
+           ],
+           advice: "체계적이고 논리적인 분야에서 강점을 발휘하며, 전문성이 요구되는 직종에서 높은 성과를 낼 수 있습니다."
+         },
+
+         // ================= 3번
+         "3": {
+           personality: [
+             {
+               title: "예술적 재능",
+               desc: "감각적인 부분에서 뛰어나, 예술·디자인·음악 등 창조적 분야에서 돋보입니다."
+             },
+             {
+               title: "창의적 사고",
+               desc: "정해진 틀에 갇히지 않고, 새롭고 독특한 아이디어를 제시하는 경향이 있습니다."
+             },
+             {
+               title: "다재다능",
+               desc: "관심 분야가 넓어, 여러 가지 영역에서 재능을 보이고 두각을 나타낼 수 있습니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "창의력",
+               desc: "무에서 유를 만들어내거나, 기존의 것을 새롭게 재해석하는 능력이 탁월합니다."
+             },
+             {
+               title: "예술적 감각",
+               desc: "색감·소리·형태 등에 민감하며, 아름다움을 찾아내는 눈이 예리합니다."
+             },
+             {
+               title: "표현력",
+               desc: "자신이 느낀 감정이나 메시지를 독특한 방식으로 전달해, 주변의 관심을 이끌어냅니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "예술 분야",
+                   jobs: ["디자이너","작가","화가","음악가","일러스트레이터","공예가","무대예술가","패션디자이너","웹디자이너","캐릭터디자이너"]
+               },
+               {
+                   category: "미디어/엔터테인먼트",
+                   jobs: ["PD","광고기획자","방송인","영화감독","콘텐츠크리에이터","음악프로듀서","방송작가","퍼포먼스디렉터","엔터테인먼트기획자"]
+               },
+               {
+                   category: "서비스/뷰티",
+                   jobs: ["이미지컨설턴트","스타일리스트","인테리어디자이너","메이크업아티스트","웨딩플래너","뷰티아티스트","공간디자이너","플로리스트"]
+               },
+               {
+                   category: "교육/문화",
+                   jobs: ["예술교육강사","문화예술기획자","미술치료사","큐레이터","예술심리상담사","문화센터강사","아동미술교사"]
+               }
+           ],
+           advice: "창의적이고 예술적인 분야에서 두각을 나타낼 수 있으며, 독특한 시각으로 차별화된 콘텐츠를 만들어낼 수 있습니다."
+         },
+
+         // ================= 4번
+         "4": {
+           personality: [
+             {
+               title: "리더십",
+               desc: "조직이나 팀에서 주도적으로 행동하며, 사람들을 이끄는 역할을 잘 수행합니다."
+             },
+             {
+               title: "책임감",
+               desc: "맡은 일을 끝까지 해내려고 하며, 결과에 대한 책임을 회피하지 않습니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "조직력",
+               desc: "여러 명이 협업해야 하는 일을 체계적으로 분배하고, 효율을 높이는 전략을 짭니다."
+             },
+             {
+               title: "판단력",
+               desc: "다양한 정보를 단시간에 취합해, 최선의 결정을 내리려는 집중력이 뛰어납니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "경영/관리",
+                   jobs: ["CEO","임원","관리자","경영컨설턴트","기업가","프로젝트매니저","조직관리전문가","전략기획자","인사관리자"]
+               },
+               {
+                   category: "정치/행정",
+                   jobs: ["정치인","외교관","고위공무원","정책입안자","로비스트","국제기구담당자","정부관계자문"]
+               }
+           ],
+           advice: "리더십이 필요한 분야에서 성공할 가능성이 높습니다. 지속적인 네트워크 관리와 자기계발로 더 높은 위치에 오를 수 있습니다."
+         },
+
+         // ================= 5번
+         "5": {
+           personality: [
+             {
+               title: "이성적",
+               desc: "어떤 상황에서도 감정보다는 객관적인 시각을 유지하려고 노력합니다."
+             },
+             {
+               title: "논리적",
+               desc: "결론을 내릴 때, 가능한 한 데이터를 기반으로 합리적인 과정을 거칩니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "문제해결능력",
+               desc: "복잡한 문제를 빠르게 파악하고, 실질적인 해결 방안을 내놓는 데 능숙합니다."
+             },
+             {
+               title: "통찰력",
+               desc: "사건의 흐름이나 사람들의 심리를 꿰뚫어보는 날카로운 관찰력이 있습니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "교육/연구",
+                   jobs: ["교수","연구원","교육컨설턴트","교육프로그램개발자","평생교육전문가","이러닝전문가","교육정책연구원","교육평가전문가","학습컨설턴트"]
+               }
+           ],
+           advice: "지식과 지혜를 전달하는 분야에서 탁월한 능력을 발휘합니다. 특히 교육·연구·상담 분야에서 성과를 낼 수 있습니다."
+         },
+
+         // ================= 6번
+         "6": {
+           personality: [
+             {
+               title: "감성적",
+               desc: "감정적 교류에 대한 욕구가 커, 주위 사람들과 따뜻한 관계를 맺으려 노력합니다."
+             },
+             {
+               title: "사교적",
+               desc: "사람들 사이에서 쉽게 친분을 쌓고, 모임의 분위기를 돋우는 편입니다."
+             },
+             {
+               title: "낭만적",
+               desc: "사소한 순간에도 감동을 느낄 수 있으며, 이를 예술적·감성적으로 표현합니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "대인관계",
+               desc: "사람들의 감정을 잘 이해하고, 상대방에 맞춘 소통 능력이 뛰어납니다."
+             },
+             {
+               title: "감성지능",
+               desc: "예술적 감각이나 감정 표현이 풍부해, 공연·창작 분야와 잘 어울립니다."
+             },
+             {
+               title: "치유능력",
+               desc: "상대방의 심적 고통을 덜어주고, 위로하며, 정서적으로 안정감을 주는 능력이 있습니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "예술/엔터테인먼트",
+                   jobs: ["아티스트","공연예술가","음악치료사","연극배우","무용가","보컬트레이너","예술감독","음악프로듀서","공연기획자"]
+               },
+               {
+                   category: "서비스/호스피탈리티",
+                   jobs: ["호텔리어","여행플래너","이벤트기획자","럭셔리브랜드매니저","고객경험디자이너","컨시어지","크루즈승무원"]
+               }
+           ],
+           advice: "사람들과 소통하고 감동을 주는 분야에서 좋은 성과를 낼 수 있습니다. 치유와 예술, 서비스 분야에 특히 강점을 보입니다."
+         },
+
+         // ================= 7번
+         "7": {
+           personality: [
+             {
+               title: "도전적",
+               desc: "새로운 상황이나 높은 난이도의 업무에도 주저하지 않고 뛰어드는 편입니다."
+             },
+             {
+               title: "진취적",
+               desc: "장기적인 비전을 세우고, 목표를 향해 역동적으로 움직입니다."
+             },
+             {
+               title: "결단력",
+               desc: "의사결정 시 망설임이 적고, 빠른 속도로 방침을 정해 행동에 옮깁니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "추진력",
+               desc: "아이디어나 프로젝트를 실행하는 데 있어 주저 없이 밀어붙이는 에너지가 강합니다."
+             },
+             {
+               title: "전략적사고",
+               desc: "넓은 시야로 상황을 판단하고, 단계별로 효율적인 전략을 구상합니다."
+             },
+             {
+               title: "적응력",
+               desc: "예상치 못한 변화가 와도 빠르게 대안을 찾아내며, 유연하게 대응합니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "영업/마케팅",
+                   jobs: ["세일즈매니저","마케팅디렉터","창업가","영업총괄","글로벌마케터"]
+               },
+               {
+                   category: "기술/공학",
+                   jobs: ["엔지니어","기술개발자","건축가","프로젝트매니저","시스템설계자"]
+               }
+           ],
+           advice: "새로운 도전과 변화가 많은 분야에서 성공할 수 있으며, 글로벌 비즈니스나 혁신 프로젝트에서 강점을 발휘합니다."
+         },
+
+         // ================= 8번
+         "8": {
+           personality: [
+             {
+               title: "인내심",
+               desc: "어려운 상황에서도 쉽게 포기하지 않고 끝까지 버티는 힘이 있습니다."
+             },
+             {
+               title: "책임감",
+               desc: "자신이 맡은 역할에 대해 강한 책임 의식을 갖고, 안정적으로 결과를 내는 편입니다."
+             },
+             {
+               title: "강인함",
+               desc: "정신적으로나 육체적으로나 쉽게 지치지 않고, 위기 상황에도 쉽게 흔들리지 않습니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "끈기",
+               desc: "일이 잘 안 풀려도 쉽게 포기하지 않으며, 장기전을 펼치는 데 능숙합니다."
+             },
+             {
+               title: "체계성",
+               desc: "정해진 규칙이나 시스템을 잘 준수하고, 업무를 정교하게 관리합니다."
+             },
+             {
+               title: "실행력",
+               desc: "계획한 것을 실제로 행동에 옮기며, 구체적인 결과물을 만들어내는 데 집중합니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "금융/재무",
+                   jobs: ["투자전문가","재무컨설턴트","자산관리사","금융애널리스트","리스크매니저","보험계리사"]
+               },
+               {
+                   category: "보안/안전",
+                   jobs: ["보안전문가","경찰","소방관","산업안전관리자","정보보안전문가","재난안전전문가"]
+               }
+           ],
+           advice: "장기적인 안목과 안정성이 필요한 분야에서 강점을 발휘합니다. 꾸준히 성실히 노력한다면 높은 신뢰를 얻을 수 있습니다."
+         },
+
+         // ================= 9번
+         "9": {
+           personality: [
+             {
+               title: "지적",
+               desc: "항상 새로운 지식이나 정보를 탐색하며, 지식의 깊이를 추구합니다."
+             },
+             {
+               title: "통찰력",
+               desc: "단순한 사건에서도 근본 원인을 파악하려 하고, 복합적인 연결고리를 잘 살펴봅니다."
+             },
+             {
+               title: "독립적",
+               desc: "타인의 간섭 없이 스스로 결정하고, 혼자서 몰입하는 상황을 선호합니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "분석력",
+               desc: "복잡한 문제를 논리적으로 분해해, 체계적으로 이해하는 데 강합니다."
+             },
+             {
+               title: "연구능력",
+               desc: "계속된 탐구와 실험을 통해 지식을 체계화하거나 새로운 가설을 세웁니다."
+             },
+             {
+               title: "집중력",
+               desc: "한 번 흥미를 느낀 분야에 깊게 파고들며, 다른 외부 요인에 쉽게 흔들리지 않습니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "연구/학문",
+                   jobs: ["과학자","연구원","학자","실험연구원","학술연구원","생명과학자","인문학연구자"]
+               },
+               {
+                   category: "IT/기술",
+                   jobs: ["프로그래머","데이터분석가","시스템엔지니어","AI연구원","보안전문가","빅데이터전문가"]
+               }
+           ],
+           advice: "깊이 있는 연구와 전문성이 필요한 분야에서 성과를 낼 수 있으며, 독립적인 환경에서 더욱 능력을 발휘합니다."
+         },
+
+         // ================= 10번
+         "10": {
+           personality: [
+             {
+               title: "유연함",
+               desc: "다양한 환경이나 사람과도 쉽게 어울리며, 상황 변화에 빠르게 적응합니다."
+             },
+             {
+               title: "적응력",
+               desc: "새로운 일이나 문화에 대한 거부감이 적고, 금세 스스로를 최적화합니다."
+             },
+             {
+               title: "균형감",
+               desc: "한쪽으로 치우치지 않고, 서로 다른 입장이나 방법을 조화롭게 조정하려는 편입니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "커뮤니케이션",
+               desc: "상대방의 의도를 파악하고, 효과적으로 의견을 전달하는 데 능숙합니다."
+             },
+             {
+               title: "협업능력",
+               desc: "팀에서 갈등이 생길 때 중재자로 나서거나, 융화하는 역할을 잘 수행합니다."
+             },
+             {
+               title: "문제해결력",
+               desc: "서로 다른 관점들을 종합해, 원만한 대안을 찾는 과정을 즐깁니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "외교/국제",
+                   jobs: ["외교관","국제기구전문가","통역사","글로벌비즈니스매니저","문화교류전문가"]
+               },
+               {
+                   category: "컨설팅/조정",
+                   jobs: ["경영컨설턴트","변화관리전문가","코치","조직문화컨설턴트","갈등조정전문가"]
+               }
+           ],
+           advice: "다양한 상황에 적응하며 조화를 이루는 분야에서 좋은 결과를 얻습니다. 특히 국제적인 환경이나 협업이 중요한 직종에서 강점을 보입니다."
+         },
+
+         // ================= 11번
+         "11": {
+           personality: [
+             {
+               title: "정의로움",
+               desc: "옳고 그름을 분명히 구분하려 하며, 불공정한 상황을 보면 그냥 지나치기 어렵습니다."
+             },
+             {
+               title: "공정함",
+               desc: "어떤 사안이든 균형 잡힌 시각으로 바라보며, 규칙과 법을 준수하려는 태도가 강합니다."
+             },
+             {
+               title: "판단력",
+               desc: "정보를 빠르게 취합해, 최선의 결정을 내리는 데 집중합니다."
+             }
+           ],
+           strengths: [
+             {
+               title: "분석력",
+               desc: "사안의 핵심을 논리적으로 분석해, 문제 해결을 위한 단서를 찾아냅니다."
+             },
+             {
+               title: "결단력",
+               desc: "충분한 데이터를 확인하면, 더 이상 미루지 않고 실행으로 옮깁니다."
+             },
+             {
+               title: "정의감",
+               desc: "불합리나 불법적 행위를 용납하지 않고, 공정한 시스템을 지지합니다."
+             }
+           ],
+           careers: [
+               {
+                   category: "법률/정의",
+                   jobs: ["판사","검사","인권변호사","법률고문","민사조정관","국제법전문가","법무관","특허변호사","노동법전문가"]
+               },
+               {
+                   category: "조사/감사",
+                   jobs: ["감사역","조사관","준법감시인","금융감독관","특별조사관","윤리경영전문가","부정방지전문가","내부통제전문가"]
+               }
+           ],
+           advice: "공정성과 정확성이 요구되는 분야에서 뛰어난 능력을 발휘하며, 법률·감사·평가 등에서 높은 성과를 낼 수 있습니다."
+         }
+       };
+
+    class CareerAnalyzer {
+      constructor() {
+        this.form = document.getElementById('analyzer-form');
+        this.nameInput = document.getElementById('name-input');
+        this.errorElement = document.getElementById('error-message');
+        this.resultElement = document.getElementById('result');
+
+        this.form.addEventListener('submit', this.handleSubmit.bind(this));
+      }
+
+      handleSubmit(e) {
+        e.preventDefault();
+        // 초기화
+        this.errorElement.style.display = 'none';
+        this.resultElement.style.display = 'none';
+
+        const fullName = this.nameInput.value.trim();
+        if (!fullName) {
+          this.showError("이름을 입력해주세요!");
+          return;
+        }
+
+        // 1) 이름 전체 글자를 순회하여 번호들을 얻기
+        const chars = Array.from(fullName);
+        const mappedNumbers = [];
+        chars.forEach(ch => {
+          const num = numberMappings[ch];
+          if (num) mappedNumbers.push(num);
+        });
+        if (mappedNumbers.length === 0) {
+          this.showError(`죄송합니다. 입력된 이름 "${fullName}" 에 해당하는 매핑 데이터를 찾을 수 없습니다.`);
+          return;
+        }
+
+        // 2) 중복 제거 (원하면 제거, 안원하면 주석 처리)
+        const uniqueNumbers = [...new Set(mappedNumbers)]; 
+        // 3) 각 number별 data를 합산
+        const combinedResult = this.aggregateData(uniqueNumbers);
+
+        // 만약 combinedResult 비었으면 에러
+        if (!combinedResult) {
+          this.showError(`죄송합니다. "${fullName}" 에 해당하는 데이터가 충분치 않습니다.`);
+          return;
+        }
+
+        this.displayResult(combinedResult);
+      }
+
+      showError(msg) {
+        this.errorElement.textContent = msg;
+        this.errorElement.style.display = 'block';
+      }
+
+      // 여러 번호(예: [9,5,7])에 해당하는 data를 합침
+      aggregateData(numbers) {
+        // 최종 합산 객체
+        const finalData = {
+          personality: [],
+          strengths: [],
+          careers: [],
+          advice: ""
+        };
+
+        numbers.forEach(num => {
+          const data = careerData[num];
+          if (!data) return; // 없으면 스킵
+
+          // personality, strengths 누적
+          if (data.personality && Array.isArray(data.personality)) {
+            finalData.personality.push(...data.personality);
+          }
+          if (data.strengths && Array.isArray(data.strengths)) {
+            finalData.strengths.push(...data.strengths);
+          }
+          // careers 누적
+          if (data.careers && Array.isArray(data.careers)) {
+            finalData.careers.push(...data.careers);
+          }
+          // advice 누적 (줄바꿈 처리)
+          if (data.advice) {
+            // 여러 문구를 한 덩어리로 합치기
+            // 예) "2번 advice" + "\n" + "5번 advice" ...
+            finalData.advice += `* ${data.advice}\n`;
+          }
+        });
+
+        return finalData;
+      }
+
+      displayResult(result) {
+        // personality 표시
+        const personalityList = document.getElementById('personality-list');
+        if (result.personality && result.personality.length > 0) {
+          personalityList.innerHTML = result.personality.map(item => `
+            <li class="detail-item">
+              <strong>${item.title}</strong>
+              <span>${item.desc}</span>
+            </li>
+          `).join('');
+        } else {
+          personalityList.innerHTML = '<li>정보 없음</li>';
+        }
+
+        // strengths 표시
+        const strengthsList = document.getElementById('strengths-list');
+        if (result.strengths && result.strengths.length > 0) {
+          strengthsList.innerHTML = result.strengths.map(item => `
+            <li class="detail-item">
+              <strong>${item.title}</strong>
+              <span>${item.desc}</span>
+            </li>
+          `).join('');
+        } else {
+          strengthsList.innerHTML = '<li>정보 없음</li>';
+        }
+
+        // careers 표시
+        const careersList = document.getElementById('careers-list');
+        if (result.careers && result.careers.length > 0) {
+          careersList.innerHTML = result.careers.map(c => `
+            <div class="career-group">
+              <h5>${c.category}</h5>
+              <p>${c.jobs.join(', ')}</p>
+            </div>
+          `).join('');
+        } else {
+          careersList.innerHTML = '<div>직업 정보 없음</div>';
+        }
+
+        // advice 표시
+        document.getElementById('advice-text').textContent = result.advice || "추가 조언이 없습니다.";
+
+        // 결과 표시
+        this.resultElement.style.display = 'block';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new CareerAnalyzer();
+    });
+  </script>
+</body>
+</html>
