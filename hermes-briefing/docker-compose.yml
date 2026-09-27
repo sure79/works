@@ -1,0 +1,20 @@
+# Hermes Agent — 매일 아침 뉴스 브리핑
+#
+# 사용법: ./setup.sh (Mac/Linux) 또는 .\setup.ps1 (Windows) 를 실행하면
+#         이 파일로 컨테이너를 띄우고 cron 작업까지 등록한다.
+#
+# 모든 상태(API 키, 설정, 기억, cron 작업, 스킬)는 ./data 폴더에 저장된다.
+# 다른 컴퓨터로 옮길 때는 이 폴더(hermes-briefing) 전체를 복사하면 된다.
+
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest   # amd64 / arm64 모두 지원
+    container_name: hermes
+    restart: unless-stopped                   # PC 재부팅 후 Docker가 켜지면 자동 재시작
+    command: ["gateway", "run"]               # 텔레그램 연결 + cron 스케줄러 상주
+    volumes:
+      - ./data:/opt/data
+    environment:
+      # 컨테이너가 만든 파일을 호스트 사용자 권한으로 맞춘다 (setup.sh가 자동 설정)
+      - HERMES_UID=${HERMES_UID:-10000}
+      - HERMES_GID=${HERMES_GID:-10000}
